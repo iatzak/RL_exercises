@@ -21,7 +21,7 @@ class GaussianBandit:
         return reward
 
 
-def greedy(bandit, timesteps):
+def select_action(bandit, timesteps, eps):
     rewards = np.zeros(bandit.n_arms)
     n_plays = np.zeros(bandit.n_arms)
     Q = np.zeros(bandit.n_arms)
@@ -33,26 +33,7 @@ def greedy(bandit, timesteps):
         Q[arm] = rewards[arm] / n_plays[arm]
 
     while bandit.total_played < timesteps:
-        arm = np.argmax(Q)
-        rewards[arm] += bandit.play_arm(arm)
-        n_plays[arm] += 1
-        Q[arm] = rewards[arm] / n_plays[arm]
-
-
-def epsilon_greedy(bandit, timesteps, eps=0.1):
-    rewards = np.zeros(bandit.n_arms)
-    n_plays = np.zeros(bandit.n_arms)
-    Q = np.zeros(bandit.n_arms)
-    possible_arms = range(bandit.n_arms)
-
-    for arm in possible_arms:
-        rewards[arm] += bandit.play_arm(arm)
-        n_plays[arm] += 1
-        Q[arm] = rewards[arm] / n_plays[arm]
-
-    while bandit.total_played < timesteps:
-        u = random.random()
-        if u < eps:
+        if random.random() < eps:
             arm = random.randint(0, bandit.n_arms - 1)
         else:
             arm = np.argmax(Q)
@@ -63,7 +44,7 @@ def epsilon_greedy(bandit, timesteps, eps=0.1):
 
 def main():
     n_episodes = 10000
-    n_timesteps = 2000
+    n_timesteps = 1000
     rewards_greedy = np.zeros(n_timesteps)
     rewards_egreedy = np.zeros(n_timesteps)
 
@@ -72,11 +53,11 @@ def main():
             print("current episode: " + str(i))
 
         b = GaussianBandit()  # initializes a random bandit
-        greedy(b, n_timesteps)
+        select_action(b, n_timesteps, eps=0.)  # greedy action selection
         rewards_greedy += b.rewards
 
         b.reset()  # reset the bandit before running epsilon_greedy
-        epsilon_greedy(b, n_timesteps)
+        select_action(b, n_timesteps, eps=0.1)  # epsilon-greedy action selection
         rewards_egreedy += b.rewards
 
     rewards_greedy /= n_episodes
