@@ -50,7 +50,9 @@ def update_estimate_of_action_value(bandit, Q, n_plays, arm):
     derived in section 2.4 of Sutton & Barto's book.
     """
     n_plays += 1
-    Q += 1/n_plays * (bandit.play_arm(arm) - Q)
+    step_size = 1/n_plays
+    current_reward = bandit.play_arm(arm)
+    Q += step_size * (current_reward - Q)
     return Q, n_plays
 
 
