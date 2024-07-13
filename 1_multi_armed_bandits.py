@@ -22,24 +22,31 @@ class GaussianBandit:
 
 
 def select_action(bandit, timesteps, eps):
-    rewards = np.zeros(bandit.n_arms)
     n_plays = np.zeros(bandit.n_arms)
     Q = np.zeros(bandit.n_arms)
     possible_arms = range(bandit.n_arms)
 
     for arm in possible_arms:
-        rewards[arm] += bandit.play_arm(arm)
-        n_plays[arm] += 1
-        Q[arm] = rewards[arm] / n_plays[arm]
+        Q[arm], n_plays[arm] = update_estimate_of_action_value(bandit, Q[arm], n_plays[arm], arm)
 
     while bandit.total_played < timesteps:
         if random.random() < eps:
             arm = random.randint(0, bandit.n_arms - 1)
         else:
             arm = np.argmax(Q)
-        rewards[arm] += bandit.play_arm(arm)
-        n_plays[arm] += 1
-        Q[arm] = rewards[arm] / n_plays[arm]
+        Q[arm], n_plays[arm] = update_estimate_of_action_value(bandit, Q[arm], n_plays[arm], arm)
+
+
+def update_estimate_of_action_value(bandit, Q, n_plays, arm):
+    """
+    Calculate the updated estimate of the action value incrementally,
+    using the general form
+    NewEstimate = OldEstimate + StepSize[Target - OldEstimate],
+    derived in section 2.4 of Sutton & Barto's book.
+    """
+    n_plays += 1
+    Q += 1/n_plays * (bandit.play_arm(arm) - Q)
+    return Q, n_plays
 
 
 def main():
