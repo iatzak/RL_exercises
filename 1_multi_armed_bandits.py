@@ -33,8 +33,13 @@ def select_action(bandit, timesteps, eps):
         if random.random() < eps:
             arm = random.randint(0, bandit.n_arms - 1)
         else:
-            arm = np.argmax(Q)
+            arm = get_argmax_random_tie_break(Q)
         Q[arm], n_plays[arm] = update_estimate_of_action_value(bandit, Q[arm], n_plays[arm], arm)
+
+
+def get_argmax_random_tie_break(Q):
+    """Argmax with random tie break."""
+    return np.random.choice(np.where(Q == Q.max())[0])
 
 
 def update_estimate_of_action_value(bandit, Q, n_plays, arm):
