@@ -15,7 +15,7 @@ class GaussianBandit:
         self.total_played = 0
 
     def play_arm(self, a):
-        reward = np.random.normal(self._arm_means[a], 1.)  # Use sampled mean and covariance of 1.
+        reward = np.random.normal(self._arm_means[a], 1.)  # Use sampled mean and variance of 1.
         self.total_played += 1
         self.rewards.append(reward)
         return reward
@@ -27,26 +27,43 @@ def greedy(bandit, timesteps):
     Q = np.zeros(bandit.n_arms)
     possible_arms = range(bandit.n_arms)
 
-    # TODO: init variables (rewards, n_plays, Q) by playing each arm once
+    for arm in possible_arms:
+        rewards[arm] += bandit.play_arm(arm)
+        n_plays[arm] += 1
+        Q[arm] = rewards[arm] / n_plays[arm]
 
-    # Main loop
     while bandit.total_played < timesteps:
-        # This example shows how to play a random arm:
-        a = random.choice(possible_arms)
-        reward_for_a = bandit.play_arm(a)
-        # TODO: instead do greedy action selection
-        # TODO: update the variables (rewards, n_plays, Q) for the selected arm
+        arm = np.argmax(Q)
+        rewards[arm] += bandit.play_arm(arm)
+        n_plays[arm] += 1
+        Q[arm] = rewards[arm] / n_plays[arm]
 
 
-def epsilon_greedy(bandit, timesteps):
-    # TODO: epsilon greedy action selection (you can copy your code for greedy as a starting point)
+def epsilon_greedy(bandit, timesteps, eps=0.1):
+    rewards = np.zeros(bandit.n_arms)
+    n_plays = np.zeros(bandit.n_arms)
+    Q = np.zeros(bandit.n_arms)
+    possible_arms = range(bandit.n_arms)
+
+    for arm in possible_arms:
+        rewards[arm] += bandit.play_arm(arm)
+        n_plays[arm] += 1
+        Q[arm] = rewards[arm] / n_plays[arm]
+
     while bandit.total_played < timesteps:
-        reward_for_a = bandit.play_arm(0)  # Just play arm 0 as placeholder
+        u = random.random()
+        if u < eps:
+            arm = random.randint(0, bandit.n_arms - 1)
+        else:
+            arm = np.argmax(Q)
+        rewards[arm] += bandit.play_arm(arm)
+        n_plays[arm] += 1
+        Q[arm] = rewards[arm] / n_plays[arm]
 
 
 def main():
-    n_episodes = 500  # TODO: set to 10000 to decrease noise in plot
-    n_timesteps = 1000
+    n_episodes = 10000
+    n_timesteps = 2000
     rewards_greedy = np.zeros(n_timesteps)
     rewards_egreedy = np.zeros(n_timesteps)
 
@@ -71,7 +88,7 @@ def main():
     plt.legend()
     plt.xlabel("Timesteps")
     plt.ylabel("Reward")
-    plt.savefig('bandit_strategies.eps')
+    # plt.savefig('bandit_strategies.eps')
     plt.show()
 
 
