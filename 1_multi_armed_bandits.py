@@ -21,7 +21,7 @@ class GaussianBandit:
         return reward
 
 
-def select_action(bandit, timesteps, eps, annealing=False):
+def run_episode(bandit, timesteps, eps, annealing=False):
     n_plays = np.zeros(bandit.n_arms)
     Q = np.zeros(bandit.n_arms)
     possible_arms = range(bandit.n_arms)
@@ -42,7 +42,7 @@ def select_action(bandit, timesteps, eps, annealing=False):
 
 def get_argmax_random_tie_break(Q):
     """Argmax with random tie break."""
-    return np.argmax(Q)  # np.random.choice(np.where(Q == Q.max())[0])
+    return np.random.choice(np.where(Q == Q.max())[0])
 
 
 def update_estimate_of_action_value(bandit, Q, n_plays, arm):
@@ -60,7 +60,7 @@ def update_estimate_of_action_value(bandit, Q, n_plays, arm):
 
 
 def main():
-    n_episodes = 10000
+    n_episodes = 500
     n_timesteps = 1000
     rewards_greedy = np.zeros(n_timesteps)
     rewards_egreedy = np.zeros(n_timesteps)
@@ -71,15 +71,15 @@ def main():
             print("current episode: " + str(i))
 
         b = GaussianBandit()  # initializes a random bandit
-        select_action(b, n_timesteps, eps=0.)  # greedy action selection
+        run_episode(b, n_timesteps, eps=0.)  # greedy action selection
         rewards_greedy += b.rewards
 
         b.reset()  # reset the bandit before running epsilon_greedy
-        select_action(b, n_timesteps, eps=0.1)  # epsilon-greedy action selection
+        run_episode(b, n_timesteps, eps=0.1)  # epsilon-greedy action selection
         rewards_egreedy += b.rewards
 
         b.reset()  # reset the bandit before running epsilon_greedy
-        select_action(b, n_timesteps, eps=0.1, annealing=True)  # epsilon-greedy with annealing
+        run_episode(b, n_timesteps, eps=0.1, annealing=True)  # epsilon-greedy with annealing
         rewards_egreedy_annealing += b.rewards
 
     rewards_greedy /= n_episodes
