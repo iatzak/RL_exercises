@@ -42,7 +42,8 @@ def run_episode(bandit, timesteps, eps, annealing=False):
 
 def get_argmax_random_tie_break(Q):
     """Argmax with random tie break."""
-    return np.random.choice(np.where(Q == Q.max())[0])
+    indices_max_value = np.where(Q == Q.max())[0]
+    return np.random.choice(indices_max_value)
 
 
 def update_estimate_of_action_value(bandit, Q, n_plays, arm):
