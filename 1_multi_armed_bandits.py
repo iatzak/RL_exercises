@@ -83,12 +83,14 @@ def main():
     rewards_egreedy /= n_episodes
     rewards_egreedy_annealing /= n_episodes
 
+    for strategy_name, rewards in zip(['Greedy', 'Epsilon-Greedy', 'Epsilon-Greedy with Annealing'],
+                                      [rewards_greedy, rewards_egreedy, rewards_egreedy_annealing]):
+        total_reward = np.sum(rewards)
+        print(f"Total reward of {strategy_name} strategy averaged over {n_episodes} episodes: {total_reward}")
+
     plt.plot(rewards_greedy, label="greedy")
-    print("Total reward of greedy strategy averaged over " + str(n_episodes) + " episodes: " + str(np.sum(rewards_greedy)))
     plt.plot(rewards_egreedy, label="e-greedy")
-    print("Total reward of epsilon greedy strategy averaged over " + str(n_episodes) + " episodes: " + str(np.sum(rewards_egreedy)))
     plt.plot(rewards_egreedy_annealing, label="e-greedy w/ annealing")
-    print("Total reward of epsilon greedy strategy with annealing averaged over " + str(n_episodes) + " episodes: " + str(np.sum(rewards_egreedy_annealing)))
     plt.legend()
     plt.xlabel("Timesteps")
     plt.ylabel("Reward")
