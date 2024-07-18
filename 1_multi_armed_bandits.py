@@ -94,6 +94,7 @@ def main():
     plt.legend()
     plt.xlabel("Timesteps")
     plt.ylabel("Reward")
+    plt.title("Comparison of Action-Selecting Strategies for the k-armed Bandit Problem")
     # plt.savefig('bandit_strategies.eps')
     plt.show()
 
