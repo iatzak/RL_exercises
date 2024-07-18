@@ -61,6 +61,19 @@ def update_estimate_of_action_value(bandit, Q, n_plays, arm):
     return Q, n_plays
 
 
+def plot_rewards(rewards_greedy, rewards_egreedy, rewards_egreedy_annealing):
+    """Plot the average rewards obtained with each strategy."""
+    plt.plot(rewards_greedy, label="Greedy")
+    plt.plot(rewards_egreedy, label="Epsilon-Greedy")
+    plt.plot(rewards_egreedy_annealing, label="Epsilon-Greedy w/ Annealing")
+    plt.legend()
+    plt.xlabel("Timesteps")
+    plt.ylabel("Reward")
+    plt.title("Comparison of Action-Selecting Strategies for the k-armed Bandit Problem")
+    # plt.savefig('bandit_strategies.eps')
+    plt.show()
+
+
 def main():
     n_episodes = 1000
     n_timesteps = 1000
@@ -88,15 +101,7 @@ def main():
         total_reward = np.sum(rewards)
         print(f"Total reward of {strategy_name} strategy averaged over {n_episodes} episodes: {total_reward}")
 
-    plt.plot(rewards_greedy, label="greedy")
-    plt.plot(rewards_egreedy, label="e-greedy")
-    plt.plot(rewards_egreedy_annealing, label="e-greedy w/ annealing")
-    plt.legend()
-    plt.xlabel("Timesteps")
-    plt.ylabel("Reward")
-    plt.title("Comparison of Action-Selecting Strategies for the k-armed Bandit Problem")
-    # plt.savefig('bandit_strategies.eps')
-    plt.show()
+    plot_rewards(rewards_greedy, rewards_egreedy, rewards_egreedy_annealing)
 
 
 if __name__ == "__main__":
