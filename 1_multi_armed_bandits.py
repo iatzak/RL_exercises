@@ -37,6 +37,7 @@ def run_episode(bandit, timesteps, eps, annealing=False):
             arm = random.randint(0, bandit.n_arms - 1)
         else:
             arm = get_argmax_random_tie_break(Q)
+
         Q[arm], n_plays[arm] = update_estimate_of_action_value(bandit, Q[arm], n_plays[arm], arm)
 
 
@@ -61,7 +62,7 @@ def update_estimate_of_action_value(bandit, Q, n_plays, arm):
 
 
 def main():
-    n_episodes = 500
+    n_episodes = 1000
     n_timesteps = 1000
     rewards_greedy = np.zeros(n_timesteps)
     rewards_egreedy = np.zeros(n_timesteps)
@@ -71,21 +72,17 @@ def main():
         if i % 100 == 0:
             print("current episode: " + str(i))
 
-        b = GaussianBandit()  # initializes a random bandit
-        run_episode(b, n_timesteps, eps=0.)  # greedy action selection
-        rewards_greedy += b.rewards
-
-        b.reset()  # reset the bandit before running epsilon_greedy
-        run_episode(b, n_timesteps, eps=0.1)  # epsilon-greedy action selection
-        rewards_egreedy += b.rewards
-
-        b.reset()  # reset the bandit before running epsilon_greedy
-        run_episode(b, n_timesteps, eps=0.1, annealing=True)  # epsilon-greedy with annealing
-        rewards_egreedy_annealing += b.rewards
+        bandit = GaussianBandit()  # initializes a random bandit
+        for strategy, rewards in zip([(0., False), (0.1, False), (0.1, True)],
+                                     [rewards_greedy, rewards_egreedy, rewards_egreedy_annealing]):
+            bandit.reset()
+            run_episode(bandit, n_timesteps, eps=strategy[0], annealing=strategy[1])
+            rewards += bandit.rewards
 
     rewards_greedy /= n_episodes
     rewards_egreedy /= n_episodes
     rewards_egreedy_annealing /= n_episodes
+
     plt.plot(rewards_greedy, label="greedy")
     print("Total reward of greedy strategy averaged over " + str(n_episodes) + " episodes: " + str(np.sum(rewards_greedy)))
     plt.plot(rewards_egreedy, label="e-greedy")
