@@ -10,25 +10,25 @@ custom_map3x3 = [
     'FHG',
 ]
 env = gym.make("FrozenLake-v0", desc=custom_map3x3)
-# TODO: Uncomment the following line to try the default map (4x4):
-#env = gym.make("FrozenLake-v0")
+# Uncomment the following line to try the default map (4x4):
+# env = gym.make("FrozenLake-v0")
 
-# Uncomment the following lines for even larger maps:
+# Uncomment the following lines for larger maps:
 #random_map = generate_random_map(size=5, p=0.8)
 #env = gym.make("FrozenLake-v0", desc=random_map)
 
-# Init some useful variables:
+# Initialize useful variables
 n_states = env.observation_space.n
 n_actions = env.action_space.n
 
-r = np.zeros(n_states) # the r vector is zero everywhere except for the goal state (last state)
+r = np.zeros(n_states)  # rewards are zero everywhere except for the goal state (last state)
 r[-1] = 1.
 
 gamma = 0.8
 
 
-""" This is a helper function that returns the transition probability matrix P for a policy """
 def trans_matrix_for_policy(policy):
+    """Return the transition probability matrix P for a policy"""
     transitions = np.zeros((n_states, n_states))
     for s in range(n_states):
         probs = env.P[s][policy[s]]
@@ -37,8 +37,8 @@ def trans_matrix_for_policy(policy):
     return transitions
 
 
-""" This is a helper function that returns terminal states """
 def terminals():
+    """Return a list with the indices of the terminal states"""
     terms = []
     for s in range(n_states):
         # terminal is when we end with probability 1 in terminal:
@@ -57,8 +57,9 @@ def value_policy(policy):
 
 
 def bruteforce_policies():
-    terms = terminals()
-    indices_non_terminal_states = np.setdiff1d(range(n_states), terms)
+    """Determine the optimal policies by comparing the value functions of all possible policies"""
+    terminal_states = terminals()
+    indices_non_terminal_states = np.setdiff1d(range(n_states), terminal_states)
     optimal_policies = []
 
     # Generate every policy, i.e. all n_states-sized arrays with every combination of range(n_actions)
@@ -109,8 +110,7 @@ def bruteforce_policies():
 
 
 def main():
-    # print the environment
-    print("current environment: ")
+    print("Current environment: ")
     env.render()
     print("")
 
