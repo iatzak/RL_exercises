@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+from itertools import product
 
 # Init environment
 # Lets use a smaller 3x3 custom map for faster computations
@@ -57,21 +58,42 @@ def value_policy(policy):
 
 def bruteforce_policies():
     terms = terminals()
-    optimalpolicies = []
+    optimal_policies = []
 
     policy = np.zeros(n_states, dtype=np.int64)  # in the discrete case a policy is just an array with action = policy[state]
     optimalvalue = np.zeros(n_states)
-    
+
     # TODO: implement code that tries all possible policies, calculates the values using def value_policy().
     #       Find the optimal values and the optimal policies to answer the exercise questions.
+    # The full set of policies consists of every combination of (n_states)-entry vectors with 
+    # 0, 1, ..., n_actions-1 as entries
+    all_policies = list(product(range(n_actions), repeat=n_states))
+    all_values = [value_policy(policy) for policy in all_policies]
 
+    # An optimal policy maximizes the value of each state
+    # Thus, it suffices to check for the sum of each policy value
+    # i.e., there's no need to check for each value
+    optimal_policies_indices = []
+    max_value = -np.inf
+    for index, values in enumerate(all_values):
+        sum_values = np.sum(values)
+        if sum_values > max_value:
+            # if a new optimal policy is found, list is updated with its corresponding index only
+            max_value = sum_values
+            optimal_policies_indices = [index]
+        elif sum_values == max_value:
+            # if another optimal policy is found, append its index to list
+            optimal_policies_indices.append(index)
+
+    optimal_policies = [all_policies[i] for i in optimal_policies_indices]
+    optimalvalue = value_policy(optimal_policies[0])  # values are the same, thus take any optimal policy
     print("Optimal value function:")
     print(optimalvalue)
     print("number optimal policies:")
-    print(len(optimalpolicies))
+    print(len(optimal_policies))
     print("optimal policies:")
-    print(np.array(optimalpolicies))
-    return optimalpolicies
+    print(np.array(optimal_policies))
+    return optimal_policies
 
 
 def main():
