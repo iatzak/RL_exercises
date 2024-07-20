@@ -47,10 +47,11 @@ def terminals():
 
 
 def value_policy(policy):
+    """Calculate the value function vector by solving (I-gamma*P)v=r"""
     P = trans_matrix_for_policy(policy)
-    # TODO: calculate and return v
-    # (P, r and gamma already given)
-    v = None
+    I = np.eye(len(P))
+    A = I - gamma*P
+    v = np.linalg.solve(A, r)
     return v
 
 
