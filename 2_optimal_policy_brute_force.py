@@ -58,37 +58,49 @@ def value_policy(policy):
 
 def bruteforce_policies():
     terms = terminals()
+    indices_non_terminal_states = np.setdiff1d(range(n_states), terms)
     optimal_policies = []
 
-    policy = np.zeros(n_states, dtype=np.int64)  # in the discrete case a policy is just an array with action = policy[state]
-    optimalvalue = np.zeros(n_states)
-
-    # TODO: implement code that tries all possible policies, calculates the values using def value_policy().
-    #       Find the optimal values and the optimal policies to answer the exercise questions.
-    # The full set of policies consists of every combination of (n_states)-entry vectors with 
-    # 0, 1, ..., n_actions-1 as entries
+    # Generate every policy, i.e. all n_states-sized arrays with every combination of range(n_actions)
     all_policies = list(product(range(n_actions), repeat=n_states))
+    # Calculate the value function of every policy
     all_values = [value_policy(policy) for policy in all_policies]
 
     # An optimal policy maximizes the value of each state
     # Thus, it suffices to check for the sum of each policy value
     # i.e., there's no need to check for each value
     optimal_policies_indices = []
+    unique_policies = {}
     max_value = -np.inf
+
     for index, values in enumerate(all_values):
         sum_values = np.sum(values)
+        policy = all_policies[index]
+        # Store non-terminal entries of policy. Converted to tuple to be hashable for dict
+        policy_non_terminal = tuple([policy[i] for i in indices_non_terminal_states])
+
         if sum_values > max_value:
-            # if a new optimal policy is found, list is updated with its corresponding index only
+            # If a new optimal policy is found, list is reinitialized with its corresponding index only
+            # Dictionary is also reinitialized with non-terminal actions and the index
             max_value = sum_values
             optimal_policies_indices = [index]
-        elif sum_values == max_value:
-            # if another optimal policy is found, append its index to list
-            optimal_policies_indices.append(index)
+            unique_policies = {policy_non_terminal: index}
 
+        elif sum_values == max_value:
+            # If another optimal policy is found, compare non-terminal actions
+            # If actions are the same, then the policy is redundant,
+            # if not, it is a new optimal policy and is thus stored
+            if policy_non_terminal not in unique_policies.keys():
+                optimal_policies_indices.append(index)
+                unique_policies[policy_non_terminal] = index
+
+    # Get optimal policies (now including terminal states, which don't really matter)
     optimal_policies = [all_policies[i] for i in optimal_policies_indices]
-    optimalvalue = value_policy(optimal_policies[0])  # values are the same, thus take any optimal policy
+    # Get optimal value function. Use any optimal policy, since their values are equal
+    optimal_value = value_policy(optimal_policies[0])
+
     print("Optimal value function:")
-    print(optimalvalue)
+    print(optimal_value)
     print("number optimal policies:")
     print(len(optimal_policies))
     print("optimal policies:")
