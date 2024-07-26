@@ -1,33 +1,23 @@
 import gym
 import numpy as np
 
-custom_map3x3 = [
-    'SFF',
-    'FFF',
-    'FHG',
-]
-# env = gym.make("FrozenLake-v0", desc=custom_map3x3)
+# Initial environment
+env = gym.make("FrozenLake-v0")
 
-# Init environment
-# env = gym.make("FrozenLake-v0")
-
-# you can set it to deterministic with:
+# Deterministic environment
 # env = gym.make("FrozenLake-v0", is_slippery=False)
 
-# If you want to try larger maps you can do this using:
-# random_map = gym.envs.toy_text.frozen_lake.generate_random_map(size=5, p=0.8)
-# env = gym.make("FrozenLake-v0", desc=random_map)
-# Or:
-env = gym.make("FrozenLake-v0", map_name="8x8")
+# Larger environment
+# env = gym.make("FrozenLake-v0", map_name="8x8")
 
 
-# Init some useful variables:
+# Useful variables
 n_states = env.observation_space.n
 n_actions = env.action_space.n
 
 
 def print_policy(policy, env):
-    """ This is a helper function to print a nice policy representation from the policy"""
+    """Print a representation of the policy"""
     moves = [u'←', u'↓', u'→', u'↑']
     if not hasattr(env, 'desc'):
         env = env.env
@@ -43,49 +33,55 @@ def print_policy(policy, env):
 
 
 def value_iteration():
-    V_states = np.zeros(n_states)  # init values as zero
-    theta = 1e-8
-    gamma = 0.8
-    policy = np.zeros(n_states, dtype=int)
+    """
+    Calculate an approximation of an optimal policy using
+    the value iteration algorithm as given in section 4.4 of
+    Sutton and Barto
+    """
+    V_states = np.zeros(n_states)  # initialize all state values as 0
+    theta = 1e-8  # threshold for accurary of estimation
+    gamma = 0.8  # discount factor
+    policy = np.zeros(n_states, dtype=int)  # placeholder
 
-    delta = theta + 1
-    i = 0
-    while delta > theta:
+    i = 0  # counter for number of iterations
+    while True:
         delta = 0.
         for s in range(n_states):
-            v = V_states[s]
+            v = V_states[s]  # previous state value
             max_sum = 0.
-            for a in range(n_actions):
+            for a in range(n_actions):  # get maximum value from all actions
                 bellman_sum = 0
                 for p, s_prime, r, _ in env.P[s][a]:
-                    bellman_sum += p*(r + gamma*V_states[s_prime])
+                    bellman_sum += p*(r + gamma*V_states[s_prime])  # Bellman update rule
                 if bellman_sum > max_sum:
                     max_sum = bellman_sum
                     policy[s] = a
             V_states[s] = max_sum
-            delta = max(delta, np.abs(v - V_states[s]))
+            delta = max(delta, np.abs(v - V_states[s]))  # check if value function converged
         i += 1
-    print(f"Number of iterations: {i}")
+        if delta < theta:
+            break
+    print(f"Number of iterations: {i}\n")
     print(f"Optimal value function:\n{np.array2string(V_states, precision=3, floatmode='fixed')}\n")
     return policy
 
 
 def main():
-    # print the environment
+    # Print the environment
     print("current environment: ")
     env.render()
-    dims = env.desc.shape
     print()
 
-    # run the value iteration
+    # Run the value iteration
     policy = value_iteration()
     print("Computed policy: ")
-    print(policy.reshape(dims))
-    # if you computed a (working) policy, you can print it nicely with the following command:
+    # dims = env.desc.shape
+    # print(policy.reshape(dims))
     print_policy(policy, env)
 
-    # This code can be used to "rollout" a policy in the environment:
-    """print ("rollout policy:")
+    # The code below can be used to "rollout" a policy in the environment
+    """
+    print ("rollout policy:")
     maxiter = 100
     state = env.reset()
     for i in range(maxiter):
@@ -94,7 +90,8 @@ def main():
         state=new_state
         if done:
             print("Finished episode")
-            break"""
+            break
+    """
 
 
 if __name__ == "__main__":
