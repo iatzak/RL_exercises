@@ -9,7 +9,7 @@ custom_map3x3 = [
 # env = gym.make("FrozenLake-v0", desc=custom_map3x3)
 
 # Init environment
-env = gym.make("FrozenLake-v0")
+# env = gym.make("FrozenLake-v0")
 
 # you can set it to deterministic with:
 # env = gym.make("FrozenLake-v0", is_slippery=False)
@@ -18,7 +18,7 @@ env = gym.make("FrozenLake-v0")
 # random_map = gym.envs.toy_text.frozen_lake.generate_random_map(size=5, p=0.8)
 # env = gym.make("FrozenLake-v0", desc=random_map)
 # Or:
-# env = gym.make("FrozenLake-v0", map_name="8x8")
+env = gym.make("FrozenLake-v0", map_name="8x8")
 
 
 # Init some useful variables:
@@ -46,12 +46,27 @@ def value_iteration():
     V_states = np.zeros(n_states)  # init values as zero
     theta = 1e-8
     gamma = 0.8
-    # TODO: implement the value iteration algorithm
-    # Hint: env.P[state][action] gives you tuples (p, n_state, r, is_terminal), which tell you the probability p that you end up in the next state n_state and receive reward r
-
-    # TODO: After value iteration algorithm, obtain policy and return it
     policy = np.zeros(n_states, dtype=int)
 
+    delta = theta + 1
+    i = 0
+    while delta > theta:
+        delta = 0.
+        for s in range(n_states):
+            v = V_states[s]
+            max_sum = 0.
+            for a in range(n_actions):
+                bellman_sum = 0
+                for p, s_prime, r, _ in env.P[s][a]:
+                    bellman_sum += p*(r + gamma*V_states[s_prime])
+                if bellman_sum > max_sum:
+                    max_sum = bellman_sum
+                    policy[s] = a
+            V_states[s] = max_sum
+            delta = max(delta, np.abs(v - V_states[s]))
+        i += 1
+    print(f"Number of iterations: {i}")
+    print(f"Optimal value function:\n{np.array2string(V_states, precision=3, floatmode='fixed')}\n")
     return policy
 
 
