@@ -1,20 +1,6 @@
 import gym
 import numpy as np
 
-# Initial environment
-env = gym.make("FrozenLake-v0")
-
-# Deterministic environment
-# env = gym.make("FrozenLake-v0", is_slippery=False)
-
-# Larger environment
-# env = gym.make("FrozenLake-v0", map_name="8x8")
-
-
-# Useful variables
-n_states = env.observation_space.n
-n_actions = env.action_space.n
-
 
 def print_policy(policy, env):
     """Print a representation of the policy"""
@@ -32,18 +18,19 @@ def print_policy(policy, env):
     print('\n'.join([''.join([u'{:2}'.format(item) for item in row]) for row in pol]))
 
 
-def value_iteration():
+def value_iteration(env, gamma=0.8, theta=1e-8):
     """
     Calculate an approximation of an optimal policy using
     the value iteration algorithm as given in section 4.4 of
     Sutton and Barto
     """
-    V_states = np.zeros(n_states)  # initialize all state values as 0
-    theta = 1e-8  # threshold for accurary of estimation
-    gamma = 0.8  # discount factor
-    policy = np.zeros(n_states, dtype=int)  # placeholder
+    n_states = env.observation_space.n
+    n_actions = env.action_space.n
 
-    i = 0  # counter for number of iterations
+    V_states = np.zeros(n_states)  # Initialize all state values as 0
+    policy = np.zeros(n_states, dtype=int)  # Placeholder for policy
+
+    i = 0  # Counter for number of iterations
     while True:
         delta = 0.
         for s in range(n_states):
@@ -67,13 +54,18 @@ def value_iteration():
 
 
 def main():
+    # Set environment
+    # env = gym.make("FrozenLake-v0")  # 4x4 map, non-deterministic
+    # env = gym.make("FrozenLake-v0", is_slippery=False)  # 4x4 map, deterministic
+    env = gym.make("FrozenLake-v0", map_name="8x8")  # 8x8 map, non-deterministic
+
     # Print the environment
     print("current environment: ")
     env.render()
     print()
 
     # Run the value iteration
-    policy = value_iteration()
+    policy = value_iteration(env)
     print("Computed policy: ")
     # dims = env.desc.shape
     # print(policy.reshape(dims))
