@@ -31,24 +31,22 @@ def value_iteration(env, gamma=0.8, theta=1e-8):
     policy = np.zeros(n_states, dtype=int)  # Placeholder for policy
 
     i = 0  # Counter for number of iterations
+    # Update value function until convergence
     while True:
         delta = 0.
         for s in range(n_states):
             v = V_states[s]  # previous state value
-            max_sum = 0.
-            for a in range(n_actions):  # get maximum value from all actions
-                bellman_sum = 0
-                for p, s_prime, r, _ in env.P[s][a]:
-                    bellman_sum += p*(r + gamma*V_states[s_prime])  # Bellman update rule
-                if bellman_sum > max_sum:
-                    max_sum = bellman_sum
-            V_states[s] = max_sum
+            V_states[s] = max(
+                sum(p * (r + gamma * V_states[s_prime]) for p, s_prime, r, _ in env.P[s][a])  # Calculate sum with generator
+                for a in range(n_actions)  # Take maximum over all actions
+            )
             delta = max(delta, np.abs(v - V_states[s]))  # check if value function converged
 
         i += 1
         if delta < theta:
             break
 
+    # Derive optimal policy based on the optimal state values
     for s in range(n_states):
         policy[s] = np.argmax([
             sum(p * (r + gamma * V_states[s_prime]) for p, s_prime, r, _ in env.P[s][a])
