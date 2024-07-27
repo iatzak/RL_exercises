@@ -42,9 +42,14 @@ def value_iteration(env, gamma=0.8, theta=1e-8):
                     bellman_sum += p*(r + gamma*V_states[s_prime])  # Bellman update rule
                 if bellman_sum > max_sum:
                     max_sum = bellman_sum
-                    policy[s] = a
             V_states[s] = max_sum
             delta = max(delta, np.abs(v - V_states[s]))  # check if value function converged
+
+        for s in range(n_states):
+            policy[s] = np.argmax([
+                sum(p * (r + gamma * V_states[s_prime]) for p, s_prime, r, _ in env.P[s][a])
+                for a in range(n_actions)
+            ])
         i += 1
         if delta < theta:
             break
@@ -55,9 +60,9 @@ def value_iteration(env, gamma=0.8, theta=1e-8):
 
 def main():
     # Set environment
-    # env = gym.make("FrozenLake-v0")  # 4x4 map, non-deterministic
+    env = gym.make("FrozenLake-v0")  # 4x4 map, non-deterministic
     # env = gym.make("FrozenLake-v0", is_slippery=False)  # 4x4 map, deterministic
-    env = gym.make("FrozenLake-v0", map_name="8x8")  # 8x8 map, non-deterministic
+    # env = gym.make("FrozenLake-v0", map_name="8x8")  # 8x8 map, non-deterministic
 
     # Print the environment
     print("current environment: ")
