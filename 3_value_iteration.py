@@ -45,14 +45,16 @@ def value_iteration(env, gamma=0.8, theta=1e-8):
             V_states[s] = max_sum
             delta = max(delta, np.abs(v - V_states[s]))  # check if value function converged
 
-        for s in range(n_states):
-            policy[s] = np.argmax([
-                sum(p * (r + gamma * V_states[s_prime]) for p, s_prime, r, _ in env.P[s][a])
-                for a in range(n_actions)
-            ])
         i += 1
         if delta < theta:
             break
+
+    for s in range(n_states):
+        policy[s] = np.argmax([
+            sum(p * (r + gamma * V_states[s_prime]) for p, s_prime, r, _ in env.P[s][a])
+            for a in range(n_actions)
+        ])
+
     print(f"Number of iterations: {i}\n")
     print(f"Optimal value function:\n{np.array2string(V_states, precision=3, floatmode='fixed')}\n")
     return policy
