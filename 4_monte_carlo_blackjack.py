@@ -1,6 +1,7 @@
 import gym
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 env = gym.make('Blackjack-v0')
 
@@ -15,17 +16,17 @@ def single_run_20():
     states = []
     ret = 0.
     while not done:
-        print("observation:", obs)
+        # print("observation:", obs)
         states.append(obs)
         if obs[0] >= 20:
-            print("stick")
+            # print("stick")
             obs, reward, done, _ = env.step(0)  # step=0 for stick
         else:
-            print("hit")
+            # print("hit")
             obs, reward, done, _ = env.step(1)  # step=1 for hit
-        print("reward:", reward, "\n")
+        # print("reward:", reward, "\n")
         ret += reward  # Note that gamma = 1. in this exercise
-    print("final observation:", obs)
+    # print("final observation:", obs)
     return states, ret
 
 
@@ -36,9 +37,50 @@ def policy_evaluation():
     V = np.zeros((10, 10, 2))
     returns = np.zeros((10, 10, 2))
     visits = np.zeros((10, 10, 2))
-    maxiter = 10000  # use whatever number of iterations you want
+    maxiter = 100000  # use whatever number of iterations you want
     for i in range(maxiter):
-        pass
+        states, G = single_run_20()
+
+        # In blackjack, the same state never repeats within a game
+        # Therefore, in this case it's not needed to loop backwards
+        # through state history and check if state has occurred before
+        for s in states:
+            returns[s[0]-12, s[1]-1, int(s[2])] += G
+            visits[s[0]-12, s[1]-1, int(s[2])] += 1
+            V[s[0]-12, s[1]-1, int(s[2])] = returns[s[0]-12, s[1]-1, int(s[2])] / visits[s[0]-12, s[1]-1, int(s[2])]
+
+    player_sums = np.array(range(12, 22))
+    dealer_cards = np.array(range(1, 11))
+
+    state_values = V[:, :, 0]
+    fig = go.Figure(go.Surface(x = dealer_cards, y = player_sums, z=state_values))
+    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack, after {maxiter} episodes",
+                      scene=dict(
+                        yaxis_title='Player Sum',
+                        xaxis_title='Dealer Showing',
+                        zaxis_title='State Value'
+                        ),
+                      font=dict(
+                        family="Courier New, monospace",
+                        size=20
+                        )
+                      )
+    fig.show()
+
+    state_values = V[:, :, 1]
+    fig = go.Figure(go.Surface(x = dealer_cards,y = player_sums,z=state_values))
+    fig.update_layout(title="Monte Carlo First Visit for Blackjack",
+                      scene=dict(
+                        yaxis_title='Player Sum',
+                        xaxis_title='Dealer Showing',
+                        zaxis_title='State Value'
+                        ),
+                      font=dict(
+                        family="Courier New, monospace",
+                        size=20
+                        )
+                      )
+    fig.show()
 
 
 def monte_carlo_es():
@@ -59,8 +101,8 @@ def monte_carlo_es():
 
 
 def main():
-    single_run_20()
-    # policy_evaluation()
+    # single_run_20()
+    policy_evaluation()
     # monte_carlo_es()
 
 
