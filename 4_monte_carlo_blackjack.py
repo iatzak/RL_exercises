@@ -30,6 +30,26 @@ def single_run_20():
     return states, ret
 
 
+def plot_state_values(state_values: np.ndarray, usable_ace: bool, maxiter: int):
+    """Plot the state values obtained from Monte Carlo policy evaluation."""
+    player_sums = np.array(range(12, 22))
+    dealer_cards = np.array(range(1, 11))
+
+    fig = go.Figure(go.Surface(x=dealer_cards, y=player_sums, z=state_values))
+    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack, after {maxiter} episodes",
+                      scene=dict(
+                        yaxis_title='Player Sum',
+                        xaxis_title='Dealer Showing',
+                        zaxis_title='State Value'
+                        ),
+                      font=dict(
+                        family="Courier New, monospace",
+                        size=20
+                        )
+                      )
+    fig.show()
+
+
 def policy_evaluation():
     """ Implementation of first-visit Monte Carlo prediction """
     # suggested dimensionality: player_sum (12-21), dealer card (1-10), useable ace (true/false)
@@ -50,38 +70,11 @@ def policy_evaluation():
                 visits[s[0]-12, s[1]-1, int(s[2])] += 1
                 V[s[0]-12, s[1]-1, int(s[2])] = returns[s[0]-12, s[1]-1, int(s[2])] / visits[s[0]-12, s[1]-1, int(s[2])]
 
-    player_sums = np.array(range(12, 22))
-    dealer_cards = np.array(range(1, 11))
-
-    state_values = V[:, :, 0]
-    fig = go.Figure(go.Surface(x = dealer_cards, y = player_sums, z=state_values))
-    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack, after {maxiter} episodes",
-                      scene=dict(
-                        yaxis_title='Player Sum',
-                        xaxis_title='Dealer Showing',
-                        zaxis_title='State Value'
-                        ),
-                      font=dict(
-                        family="Courier New, monospace",
-                        size=20
-                        )
-                      )
-    fig.show()
-
-    state_values = V[:, :, 1]
-    fig = go.Figure(go.Surface(x = dealer_cards,y = player_sums,z=state_values))
-    fig.update_layout(title="Monte Carlo First Visit for Blackjack",
-                      scene=dict(
-                        yaxis_title='Player Sum',
-                        xaxis_title='Dealer Showing',
-                        zaxis_title='State Value'
-                        ),
-                      font=dict(
-                        family="Courier New, monospace",
-                        size=20
-                        )
-                      )
-    fig.show()
+    # Plot results
+    values_with_usable_ace = V[:, :, 1]
+    values_without_usable_ace = V[:, :, 0]
+    plot_state_values(values_with_usable_ace, True, maxiter)
+    plot_state_values(values_without_usable_ace, False, maxiter)
 
 
 def monte_carlo_es():
