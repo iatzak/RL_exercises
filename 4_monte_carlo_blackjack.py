@@ -40,14 +40,15 @@ def policy_evaluation():
     maxiter = 100000  # use whatever number of iterations you want
     for i in range(maxiter):
         states, G = single_run_20()
-
         # In blackjack, the same state never repeats within a game
         # Therefore, in this case it's not needed to loop backwards
-        # through state history and check if state has occurred before
-        for s in states:
-            returns[s[0]-12, s[1]-1, int(s[2])] += G
-            visits[s[0]-12, s[1]-1, int(s[2])] += 1
-            V[s[0]-12, s[1]-1, int(s[2])] = returns[s[0]-12, s[1]-1, int(s[2])] / visits[s[0]-12, s[1]-1, int(s[2])]
+        # through state history and check if state has occurred before;
+        # I'm doing it for the sake of completeness of the exercise
+        for t, s in sorted(enumerate(states), reverse=True):
+            if s not in states[:t]:
+                returns[s[0]-12, s[1]-1, int(s[2])] += G
+                visits[s[0]-12, s[1]-1, int(s[2])] += 1
+                V[s[0]-12, s[1]-1, int(s[2])] = returns[s[0]-12, s[1]-1, int(s[2])] / visits[s[0]-12, s[1]-1, int(s[2])]
 
     player_sums = np.array(range(12, 22))
     dealer_cards = np.array(range(1, 11))
