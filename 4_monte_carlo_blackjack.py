@@ -2,6 +2,7 @@ import gym
 import numpy as np
 # import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 env = gym.make('Blackjack-v0')
 
@@ -30,23 +31,34 @@ def single_run_20():
     return states, ret
 
 
-def plot_state_values(state_values: np.ndarray, usable_ace: bool, maxiter: int):
+def plot_state_values(state_values: np.ndarray, maxiter: int):
     """Plot the state values obtained from Monte Carlo policy evaluation."""
     player_sums = np.array(range(12, 22))
     dealer_cards = np.array(range(1, 11))
 
-    fig = go.Figure(go.Surface(x=dealer_cards, y=player_sums, z=state_values))
-    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack, after {maxiter} episodes",
-                      scene=dict(
+    fig = make_subplots(rows=1, cols=2,
+                        specs=[[{'is_3d': True}, {'is_3d': True}]],
+                        subplot_titles=['With usable ace', 'Without usable ace'],
+                        horizontal_spacing=0.01,  vertical_spacing=0.1
+                        )
+    fig.add_trace(go.Surface(x=dealer_cards, y=player_sums, z=state_values[:, :, 1], coloraxis='coloraxis'), row=1, col=1)
+    fig.add_trace(go.Surface(x=dealer_cards, y=player_sums, z=state_values[:, :, 0], coloraxis='coloraxis'), row=1, col=2)
+    fig.update_scenes(dict(
                         yaxis_title='Player Sum',
                         xaxis_title='Dealer Showing',
                         zaxis_title='State Value'
-                        ),
-                      font=dict(
-                        family="Courier New, monospace",
-                        size=20
-                        )
+                        ), row=1, col=1)
+    fig.update_scenes(dict(
+                        yaxis_title='Player Sum',
+                        xaxis_title='Dealer Showing',
+                        zaxis_title='State Value'
+                        ), row=1, col=2)
+    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack, after {maxiter} episodes",
+                      font=dict(family="Courier New, monospace", size=16),
+                      title_font_size=30,
+                      coloraxis=dict(colorscale='thermal')
                       )
+    fig.update_annotations(font_size=26)  # for subplot titles
     fig.show()
 
 
@@ -71,10 +83,7 @@ def policy_evaluation():
                 V[s[0]-12, s[1]-1, int(s[2])] = returns[s[0]-12, s[1]-1, int(s[2])] / visits[s[0]-12, s[1]-1, int(s[2])]
 
     # Plot results
-    values_with_usable_ace = V[:, :, 1]
-    values_without_usable_ace = V[:, :, 0]
-    plot_state_values(values_with_usable_ace, True, maxiter)
-    plot_state_values(values_without_usable_ace, False, maxiter)
+    plot_state_values(V, maxiter)
 
 
 def monte_carlo_es():
