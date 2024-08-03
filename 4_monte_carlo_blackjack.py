@@ -31,6 +31,24 @@ def single_run_20():
     return states, ret
 
 
+def single_run_ES(pi: np.ndarray, env: gym.Env):
+    """Run policy that's being improved with random initial state-action pair."""
+    done = False
+    s0 = env.reset()  # Random initial state
+    a0 = np.random.randint(0, 2)  # Random initial action
+    states = [s0]  # Store states
+    actions = [a0]  # Store actions
+    obs, reward, done, _ = env.step(a0)  # Initial step
+    G = reward  # Initialize return G
+    while not done:
+        states.append(obs)
+        action = pi[(obs[0]-12, obs[1]-1, int(obs[2]))]  # After initial action, follow pi
+        actions.append(action)
+        obs, reward, done, _ = env.step(action)
+        G += reward  # gamma == 1
+    return states, actions, G
+
+
 def plot_state_values(state_values: np.ndarray, maxiter: int):
     """Plot the state values obtained from Monte Carlo policy evaluation."""
     player_sums = np.array(range(12, 22))
@@ -90,17 +108,36 @@ def monte_carlo_es():
     """ Implementation of Monte Carlo ES """
     # suggested dimensionality: player_sum (12-21), dealer card (1-10), useable ace (true/false)
     # possible variables to use:
-    pi = np.zeros((10, 10, 2))
-    # Q = np.zeros((10, 10, 2, 2))
+    pi = np.zeros((10, 10, 2), dtype=int)
     Q = np.ones((10, 10, 2, 2)) * 100  # recommended: optimistic initialization of Q
     returns = np.zeros((10, 10, 2, 2))
     visits = np.zeros((10, 10, 2, 2))
-    maxiter = 100000000  # use whatever number of iterations you want
+    maxiter = 1000000  # use whatever number of iterations you want
     for i in range(maxiter):
         if i % 100000 == 0:
             print("Iteration: " + str(i))
             print(pi[:, :, 0])
             print(pi[:, :, 1])
+
+        # Play a game following pi with random initial state-action pair
+        states, actions, G = single_run_ES(pi, env)
+
+        # In blackjack, the same state never repeats within a game
+        # Therefore, in this case it's not needed to loop backwards
+        # through state history and check if state has occurred before;
+        # I'm doing it for the sake of completeness of the exercise
+        for t, (state, action) in sorted(enumerate(zip(states, actions)), reverse=True):
+            if (state, action) not in zip(states[:t], actions[:t]):
+                returns[state[0]-12, state[1]-1, int(state[2]), action] += G
+                visits[state[0]-12, state[1]-1, int(state[2]), action] += 1
+                Q[state[0]-12, state[1]-1, int(state[2]), action] = \
+                    returns[state[0]-12, state[1]-1, int(state[2]), action] \
+                        / visits[state[0]-12, state[1]-1, int(state[2]), action]
+                pi[state[0]-12, state[1]-1, int(state[2])] = \
+                    np.argmax(Q[state[0]-12, state[1]-1, int(state[2])], axis=-1)
+
+    V = np.max(Q, axis=-1)
+    plot_state_values(V, maxiter)
 
 
 def main():
