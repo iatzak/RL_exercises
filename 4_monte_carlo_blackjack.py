@@ -127,14 +127,12 @@ def monte_carlo_es():
         # through state history and check if state has occurred before;
         # I'm doing it for the sake of completeness of the exercise
         for t, (state, action) in sorted(enumerate(zip(states, actions)), reverse=True):
+            state_index = (state[0]-12, state[1]-1, int(state[2]))
             if (state, action) not in zip(states[:t], actions[:t]):
-                returns[state[0]-12, state[1]-1, int(state[2]), action] += G
-                visits[state[0]-12, state[1]-1, int(state[2]), action] += 1
-                Q[state[0]-12, state[1]-1, int(state[2]), action] = \
-                    returns[state[0]-12, state[1]-1, int(state[2]), action] \
-                        / visits[state[0]-12, state[1]-1, int(state[2]), action]
-                pi[state[0]-12, state[1]-1, int(state[2])] = \
-                    np.argmax(Q[state[0]-12, state[1]-1, int(state[2])], axis=-1)
+                returns[state_index][action] += G
+                visits[state_index][action] += 1
+                Q[state_index][action] = returns[state_index][action] / visits[state_index][action]
+                pi[state_index] = np.argmax(Q[state_index], axis=-1)
 
     V = np.max(Q, axis=-1)
     plot_state_values(V, maxiter)
