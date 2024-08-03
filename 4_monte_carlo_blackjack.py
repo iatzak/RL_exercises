@@ -1,6 +1,5 @@
 import gym
 import numpy as np
-# import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -71,7 +70,72 @@ def plot_state_values(state_values: np.ndarray, maxiter: int):
                         xaxis_title='Dealer Showing',
                         zaxis_title='State Value'
                         ), row=1, col=2)
-    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack, after {maxiter} episodes",
+    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack (stick if sum>=20), after {maxiter} episodes",
+                      font=dict(family="Courier New, monospace", size=16),
+                      title_font_size=30,
+                      coloraxis=dict(colorscale='thermal')
+                      )
+    fig.update_annotations(font_size=26)  # for subplot titles
+    fig.show()
+
+
+def plot_optimal_policy_and_value_function(pi: np.ndarray, V: np.ndarray, maxiter: int):
+    """Plot the optimal policy and value function obtained from Monte Carlo ES."""
+    player_sums = np.array(range(12, 22))
+    dealer_cards = np.array(range(1, 11))
+
+    policy_with_usable_ace = pi[:, :, 1]
+    policy_without_usable_ace = pi[:, :, 0]
+    V_with_usable_ace = V[:, :, 1]
+    V_without_usable_ace = V[:, :, 0]
+
+    fig = make_subplots(rows=2, cols=2,
+                        specs=[[{}, {'is_3d': True}],
+                               [{}, {'is_3d': True}]],
+                        column_titles=['$\pi^*$', '$v^*$'],
+                        row_titles=['with\nusable\nace', 'without usable ace'],
+                        column_widths=[0.5, 0.5],
+                        horizontal_spacing=0.01,  vertical_spacing=0.1
+                        )
+    fig.add_trace(go.Heatmap(z=policy_with_usable_ace, colorscale=[[0, 'white'], [1, 'black']], showscale=False), row=1, col=1)
+    fig.add_trace(go.Heatmap(z=policy_without_usable_ace, colorscale=[[0, 'white'], [1, 'black']], showscale=False), row=2, col=1)
+    fig.add_trace(go.Surface(x=dealer_cards, y=player_sums, z=V_with_usable_ace, coloraxis='coloraxis'), row=1, col=2)
+    fig.add_trace(go.Surface(x=dealer_cards, y=player_sums, z=V_without_usable_ace, coloraxis='coloraxis'), row=2, col=2)
+    fig.update_xaxes(dict(
+        tickmode='array',
+        tickvals=list(range(10)),
+        ticktext=['A', 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        ), row=1, col=1)
+    fig.update_xaxes(dict(
+        tickmode='array',
+        tickvals=list(range(10)),
+        ticktext=['A', 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        ), row=2, col=1)
+    fig.update_yaxes(dict(
+        tickmode='array',
+        tickvals=list(range(10)),
+        ticktext=[12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        ), row=1, col=1)
+    fig.update_yaxes(dict(
+        tickmode='array',
+        tickvals=list(range(10)),
+        ticktext=[12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+        ), row=2, col=1)
+    fig.add_annotation(x=4, y=2, text='HIT', showarrow=False, font=dict(color='white'),row=1, col=1)
+    fig.add_annotation(x=4, y=8, text='STICK', showarrow=False, row=1, col=1)
+    fig.add_annotation(x=7, y=2, text='HIT', showarrow=False, font=dict(color='white'),row=2, col=1)
+    fig.add_annotation(x=4, y=8, text='STICK', showarrow=False, row=2, col=1)
+    fig.update_scenes(dict(
+        yaxis_title='Player Sum',
+        xaxis_title='Dealer Showing',
+        zaxis_title='State Value'
+        ), row=1, col=2)
+    fig.update_scenes(dict(
+        yaxis_title='Player Sum',
+        xaxis_title='Dealer Showing',
+        zaxis_title='State Value'
+        ), row=2, col=2)
+    fig.update_layout(title=f"Optimal policy and state-value function found by Monte Carlo ES with {maxiter} iterations",
                       font=dict(family="Courier New, monospace", size=16),
                       title_font_size=30,
                       coloraxis=dict(colorscale='thermal')
@@ -87,7 +151,7 @@ def policy_evaluation():
     V = np.zeros((10, 10, 2))
     returns = np.zeros((10, 10, 2))
     visits = np.zeros((10, 10, 2))
-    maxiter = 100000  # use whatever number of iterations you want
+    maxiter = 1000000  # use whatever number of iterations you want
     for i in range(maxiter):
         states, G = single_run_20()
         # In blackjack, the same state never repeats within a game
@@ -104,7 +168,7 @@ def policy_evaluation():
     plot_state_values(V, maxiter)
 
 
-def monte_carlo_es():
+def monte_carlo_ES():
     """ Implementation of Monte Carlo ES """
     # suggested dimensionality: player_sum (12-21), dealer card (1-10), useable ace (true/false)
     # possible variables to use:
@@ -112,7 +176,7 @@ def monte_carlo_es():
     Q = np.ones((10, 10, 2, 2)) * 100  # recommended: optimistic initialization of Q
     returns = np.zeros((10, 10, 2, 2))
     visits = np.zeros((10, 10, 2, 2))
-    maxiter = 1000000  # use whatever number of iterations you want
+    maxiter = 10000000  # use whatever number of iterations you want
     for i in range(maxiter):
         if i % 100000 == 0:
             print("Iteration: " + str(i))
@@ -135,13 +199,12 @@ def monte_carlo_es():
                 pi[state_index] = np.argmax(Q[state_index], axis=-1)
 
     V = np.max(Q, axis=-1)
-    plot_state_values(V, maxiter)
+    plot_optimal_policy_and_value_function(pi, V, maxiter)
 
 
 def main():
-    # single_run_20()
     policy_evaluation()
-    # monte_carlo_es()
+    monte_carlo_ES()
 
 
 if __name__ == "__main__":
