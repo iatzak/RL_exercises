@@ -3,10 +3,8 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-env = gym.make('Blackjack-v0')
 
-
-def single_run_20():
+def single_run_20(env: gym.Env):
     """Run the policy that sticks for player sum >= 20."""
     state = env.reset()  # state is a tuple: (player_sum, dealer_card, useable_ace)
     done = False
@@ -36,11 +34,11 @@ def single_run_ES(pi: np.ndarray, env: gym.Env):
         action = pi[(state[0]-12, state[1]-1, int(state[2]))]  # After initial action, follow pi
         actions.append(action)
         state, reward, done, _ = env.step(action)
-        G += reward  # gamma == 1
+        G += reward  # gamma = 1
     return states, actions, G
 
 
-def plot_state_values(state_values: np.ndarray, maxiter: int):
+def plot_state_values(state_values: np.ndarray, max_iter: int):
     """Plot the state values obtained from Monte Carlo policy evaluation."""
     player_sums = np.array(range(12, 22))
     dealer_cards = np.array(range(1, 11))
@@ -69,7 +67,7 @@ def plot_state_values(state_values: np.ndarray, maxiter: int):
                         ), row=1, col=2)
 
     # Update figure layout
-    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack (stick if sum>=20), after {maxiter} episodes",
+    fig.update_layout(title=f"Monte Carlo policy evaluation for blackjack (stick if sum>=20), after {max_iter} episodes",
                       font=dict(family="Courier New, monospace", size=16),
                       title_font_size=30,
                       coloraxis=dict(colorscale='thermal')
@@ -80,7 +78,7 @@ def plot_state_values(state_values: np.ndarray, maxiter: int):
     fig.show()
 
 
-def plot_optimal_policy_and_value_function(pi: np.ndarray, V: np.ndarray, maxiter: int):
+def plot_optimal_policy_and_value_function(pi: np.ndarray, V: np.ndarray, max_iter: int):
     """Plot the optimal policy and value function obtained from Monte Carlo ES."""
     player_sums = np.array(range(12, 22))
     dealer_cards = np.array(range(1, 11))
@@ -147,7 +145,7 @@ def plot_optimal_policy_and_value_function(pi: np.ndarray, V: np.ndarray, maxite
         ), row=2, col=2)
 
     # Update figure layout
-    fig.update_layout(title=f"Optimal policy and state-value function found by Monte Carlo ES with {maxiter} iterations",
+    fig.update_layout(title=f"Optimal policy and state-value function found by Monte Carlo ES with {max_iter} iterations",
                       font=dict(family="Courier New, monospace", size=16),
                       title_font_size=30,
                       coloraxis=dict(colorscale='thermal')
@@ -158,15 +156,14 @@ def plot_optimal_policy_and_value_function(pi: np.ndarray, V: np.ndarray, maxite
     fig.show()
 
 
-def policy_evaluation():
+def policy_evaluation(env: gym.Env, max_iter: int):
     """Evaluate policy stick if player sum >= 20 with first-visit Monte Carlo"""
     # Dimensionality: player_sum (12-21), dealer card (1-10), useable ace (true/false)
     V = np.zeros((10, 10, 2))
     returns = np.zeros((10, 10, 2))
     visits = np.zeros((10, 10, 2))
-    maxiter = 1000000
-    for i in range(maxiter):
-        states, G = single_run_20()
+    for i in range(max_iter):
+        states, G = single_run_20(env)
         # In blackjack, the same state never repeats within a game
         # Therefore, in this case it's not needed to loop backwards
         # through state history and check if state has occurred before;
@@ -179,18 +176,17 @@ def policy_evaluation():
                 V[state_index] = returns[state_index] / visits[state_index]  # Update approximation of state value
 
     # Plot results
-    plot_state_values(V, maxiter)
+    plot_state_values(V, max_iter)
 
 
-def monte_carlo_ES():
+def monte_carlo_ES(env: gym.Env, max_iter: int):
     """ Implementation of Monte Carlo ES """
     # Dimensionality: player_sum (12-21), dealer card (1-10), useable ace (true/false)
     pi = np.zeros((10, 10, 2), dtype=int)
     Q = np.ones((10, 10, 2, 2)) * 100  # Optimistic initialization of state-action value
     returns = np.zeros((10, 10, 2, 2))
     visits = np.zeros((10, 10, 2, 2))
-    maxiter = 10000000
-    for i in range(maxiter):
+    for i in range(max_iter):
         if i % 100000 == 0:
             print("Iteration: " + str(i))
             print(pi[:, :, 0])
@@ -216,12 +212,17 @@ def monte_carlo_ES():
     V = np.max(Q, axis=-1)
 
     # Plot results
-    plot_optimal_policy_and_value_function(pi, V, maxiter)
+    plot_optimal_policy_and_value_function(pi, V, max_iter)
 
 
 def main():
-    # policy_evaluation()
-    monte_carlo_ES()
+    # Initialite Blackjack environment
+    env = gym.make('Blackjack-v0')
+
+    max_iter = int(1e7)
+
+    # policy_evaluation(env, max_iter)
+    monte_carlo_ES(env, max_iter)
 
 
 if __name__ == "__main__":
