@@ -188,9 +188,9 @@ def monte_carlo_ES(env: gym.Env, max_iter: int):
     visits = np.zeros((10, 10, 2, 2))
     for i in range(max_iter):
         if i % 100000 == 0:
-            print("Iteration: " + str(i))
-            print(pi[:, :, 0])
-            print(pi[:, :, 1])
+            print(f"Iteration: {str(i)}")
+            print(f"Policy without usable ace:\n{pi[:, :, 0]}")
+            print(f"Policy with usable ace:\n{pi[:, :, 1]}\n")
 
         # Play a game following pi with random initial state-action pair
         states, actions, G = single_run_ES(pi, env)
