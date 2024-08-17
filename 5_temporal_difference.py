@@ -110,7 +110,17 @@ def sarsa(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
 
 def qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
     Q = np.zeros((env.observation_space.n, env.action_space.n))
-    # TODO: implement the qlearning algorithm
+
+    for i in range(num_ep):
+        s = env.reset()
+        a = select_action_eps_greedy(env, Q, s, epsilon)
+        done = False
+        while not done:
+            s_prime, r, done, _ = env.step(a)
+            a_prime = select_action_eps_greedy(env, Q, s_prime, epsilon)
+            Q[s][a] += alpha*(r + gamma*np.max(Q[s_prime]) - Q[s][a])
+            s = s_prime
+            a = a_prime
     return Q
 
 
