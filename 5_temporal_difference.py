@@ -2,6 +2,7 @@ import gym
 import numpy as np
 from itertools import product
 import matplotlib.pyplot as plt
+from matplotlib import patches
 
 
 def print_policy(Q, env):
@@ -20,9 +21,8 @@ def print_policy(Q, env):
     print('\n'.join([''.join([u'{:2}'.format(item) for item in row]) for row in policy]))
 
 
-def plot_V(Q, env):
+def plot_V(Q, env, ax):
     """ This is a helper function to plot the state values from the Q function"""
-    fig = plt.figure()
     if not hasattr(env, 'desc'):
         env = env.env
     dims = env.desc.shape
@@ -32,22 +32,19 @@ def plot_V(Q, env):
         V[idx] = np.max(Q[s])
         if env.desc[idx] in ['H', 'G']:
             V[idx] = 0.
-    plt.imshow(V, origin='upper',
-               extent=[0, dims[0], 0, dims[1]], vmin=.0, vmax=.6,
-               cmap=plt.cm.RdYlGn, interpolation='none')
+    ax.imshow(V, origin='upper',
+              extent=[0, dims[0], 0, dims[1]], vmin=.0, vmax=.6,
+              cmap=plt.cm.RdYlGn, interpolation='none')
     for x, y in product(range(dims[0]), range(dims[1])):
-        plt.text(y + 0.5, dims[0] - x - 0.5, '{:.3f}'.format(V[x, y]),
-                 horizontalalignment='center',
-                 verticalalignment='center')
-    plt.xticks([])
-    plt.yticks([])
+        ax.text(y + 0.5, dims[0] - x - 0.5, '{:.3f}'.format(V[x, y]),
+                horizontalalignment='center',
+                verticalalignment='center')
+    ax.set_xticks([])
+    ax.set_yticks([])
 
 
-def plot_Q(Q, env):
+def plot_Q(Q, env, ax):
     """ This is a helper function to plot the Q function """
-    from matplotlib import colors, patches
-    fig = plt.figure()
-    ax = fig.gca()
 
     if not hasattr(env, 'desc'):
         env = env.env
@@ -61,7 +58,6 @@ def plot_Q(Q, env):
     pos = [[0.2, 0.5], [0.5, 0.2], [0.8, 0.5], [0.5, 0.8]]
 
     cmap = plt.cm.RdYlGn
-    norm = colors.Normalize(vmin=.0, vmax=.6)
 
     ax.imshow(np.zeros(dims), origin='upper', extent=[0, dims[0], 0, dims[1]], vmin=.0, vmax=.6, cmap=cmap)
     ax.grid(which='major', color='black', linestyle='-', linewidth=2)
@@ -71,18 +67,31 @@ def plot_Q(Q, env):
         x, y = idx
         if env.desc[idx] in ['H', 'G']:
             ax.add_patch(patches.Rectangle((y, 3 - x), 1, 1, color=cmap(.0)))
-            plt.text(y + 0.5, dims[0] - x - 0.5, '{:.2f}'.format(.0),
-                     horizontalalignment='center',
-                     verticalalignment='center')
+            ax.text(y + 0.5, dims[0] - x - 0.5, '{:.2f}'.format(.0),
+                    horizontalalignment='center',
+                    verticalalignment='center')
             continue
         for a in range(len(tri)):
             ax.add_patch(patches.Polygon(tri[a] + np.array([y, 3 - x]), color=cmap(Q[s][a])))
-            plt.text(y + pos[a][0], dims[0] - 1 - x + pos[a][1], '{:.2f}'.format(Q[s][a]),
-                     horizontalalignment='center', verticalalignment='center',
-                     fontsize=9, fontweight=('bold' if Q[s][a] == np.max(Q[s]) else 'normal'))
+            ax.text(y + pos[a][0], dims[0] - 1 - x + pos[a][1], '{:.2f}'.format(Q[s][a]),
+                    horizontalalignment='center', verticalalignment='center',
+                    fontsize=9, fontweight=('bold' if Q[s][a] == np.max(Q[s]) else 'normal'))
 
-    plt.xticks([])
-    plt.yticks([])
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+
+def plot_episode_lengths(episode_lengths, ax):
+    ax.plot(episode_lengths)
+    ax.set_title("Episode lengths")
+    ax.set_xlabel("Episode")
+    ax.set_ylabel("Length")
+
+
+def bin_epsisode_lengths(episode_lengths, bin_size=100):
+    reshaped_lengths = episode_lengths[:len(episode_lengths)
+        // bin_size * bin_size].reshape(-1, bin_size)
+    return reshaped_lengths.mean(axis=1)
 
 
 def select_action_eps_greedy(env, Q, s, eps):
@@ -133,24 +142,29 @@ def qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
     return Q, episode_lengths
 
 
-env = gym.make('FrozenLake-v0')
-# env=gym.make('FrozenLake-v0', is_slippery=False)
-# env=gym.make('FrozenLake-v0', map_name="8x8")
+# env = gym.make('FrozenLake-v0')
+env = gym.make('FrozenLake-v0', is_slippery=False)
+# env = gym.make('FrozenLake-v0', map_name="8x8", is_slippery=False)
 
-print("current environment: ")
+print("current environment:")
 env.render()
 print()
 
+fig, ax = plt.subplots(nrows=2, ncols=3)
+
 print("Running sarsa...")
 Q, ep_lengths = sarsa(env)
-plot_V(Q, env)
-plot_Q(Q, env)
+binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
+plot_V(Q, env, ax[0][0])
+plot_Q(Q, env, ax[0][1])
+plot_episode_lengths(binned_ep_lengths, ax[0][2])
 print_policy(Q, env)
-plt.show()
 
 print("\nRunning qlearning")
 Q, ep_lengths = qlearning(env)
-plot_V(Q, env)
-plot_Q(Q, env)
+binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
+plot_V(Q, env, ax[1][0])
+plot_Q(Q, env, ax[1][1])
+plot_episode_lengths(binned_ep_lengths, ax[1][2])
 print_policy(Q, env)
 plt.show()
