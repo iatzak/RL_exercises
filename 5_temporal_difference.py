@@ -6,7 +6,7 @@ from matplotlib import patches
 
 
 def print_policy(Q, env):
-    """ This is a helper function to print a nice policy from the Q function"""
+    """Print a policy obtained from the Q function"""
     moves = [u'←', u'↓', u'→', u'↑']
     if not hasattr(env, 'desc'):
         env = env.env
@@ -18,11 +18,12 @@ def print_policy(Q, env):
         policy[idx] = moves[np.argmax(Q[s])]
         if env.desc[idx] in [b'H', b'G']:
             policy[idx] = env.desc[idx]
+    print("Policy:")
     print('\n'.join([''.join([u'{:2}'.format(item) for item in row]) for row in policy]))
 
 
 def plot_V(Q, env, ax):
-    """ This is a helper function to plot the state values from the Q function"""
+    """Plot the state values obtined from the Q function"""
     if not hasattr(env, 'desc'):
         env = env.env
     dims = env.desc.shape
@@ -44,7 +45,7 @@ def plot_V(Q, env, ax):
 
 
 def plot_Q(Q, env, ax):
-    """ This is a helper function to plot the Q function """
+    """Plot the action value function"""
 
     if not hasattr(env, 'desc'):
         env = env.env
@@ -82,6 +83,7 @@ def plot_Q(Q, env, ax):
 
 
 def plot_episode_lengths(episode_lengths, ax):
+    """Plot the episode lengths against the episode index"""
     ax.plot(episode_lengths)
     ax.set_title("Episode lengths")
     ax.set_xlabel("Episode")
@@ -89,12 +91,14 @@ def plot_episode_lengths(episode_lengths, ax):
 
 
 def bin_epsisode_lengths(episode_lengths, bin_size=100):
+    """Group episodes lengths in bins"""
     reshaped_lengths = episode_lengths[:len(episode_lengths)
         // bin_size * bin_size].reshape(-1, bin_size)
     return reshaped_lengths.mean(axis=1)
 
 
 def select_action_eps_greedy(env, Q, s, eps):
+    """Get an action using the epsilon-greedy action selection"""
     if np.random.random() > eps:
         return np.argmax(Q[s])
     else:
@@ -102,6 +106,7 @@ def select_action_eps_greedy(env, Q, s, eps):
 
 
 def sarsa(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
+    """Calculate the action-value function with the SARSA algorithm"""
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     episode_lengths = np.zeros(num_ep)
 
@@ -118,10 +123,12 @@ def sarsa(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
             a = a_prime
             steps += 1
         episode_lengths[i] = steps
+
     return Q, episode_lengths
 
 
 def qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
+    """Calculate the action-value function with the Q-learning algorithm"""
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     episode_lengths = np.zeros(num_ep)
 
@@ -146,13 +153,12 @@ def qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
 env = gym.make('FrozenLake-v0', is_slippery=False)
 # env = gym.make('FrozenLake-v0', map_name="8x8", is_slippery=False)
 
-print("current environment:")
+print("Current Environment:")
 env.render()
-print()
 
 fig, ax = plt.subplots(nrows=2, ncols=3)
 
-print("Running sarsa...")
+print("\nRunning SARSA")
 Q, ep_lengths = sarsa(env)
 binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
 plot_V(Q, env, ax[0][0])
@@ -160,7 +166,7 @@ plot_Q(Q, env, ax[0][1])
 plot_episode_lengths(binned_ep_lengths, ax[0][2])
 print_policy(Q, env)
 
-print("\nRunning qlearning")
+print("\nRunning Q-learning")
 Q, ep_lengths = qlearning(env)
 binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
 plot_V(Q, env, ax[1][0])
