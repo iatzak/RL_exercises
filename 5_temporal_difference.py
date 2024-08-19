@@ -90,6 +90,14 @@ def plot_episode_lengths(episode_lengths, ax):
     ax.set_ylabel("Length")
 
 
+def create_environment(env_name='FrozenLake-v0', is_slippery=True, map_name='4x4'):
+    """Create and return the environment based on given parameters."""
+    if env_name == 'FrozenLake-v0':
+        return gym.make(env_name, is_slippery=is_slippery, map_name=map_name)
+    else:
+        return gym.make(env_name)
+
+
 def bin_epsisode_lengths(episode_lengths, bin_size=100):
     """Group episodes lengths in bins"""
     reshaped_lengths = episode_lengths[:len(episode_lengths)
@@ -149,9 +157,7 @@ def qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
     return Q, episode_lengths
 
 
-# env = gym.make('FrozenLake-v0')
-env = gym.make('FrozenLake-v0', is_slippery=False)
-# env = gym.make('FrozenLake-v0', map_name="8x8", is_slippery=False)
+env = create_environment(is_slippery=False)
 
 print("Current Environment:")
 env.render()
