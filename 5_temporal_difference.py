@@ -98,7 +98,7 @@ def create_environment(env_name='FrozenLake-v0', is_slippery=True, map_name='4x4
         return gym.make(env_name)
 
 
-def bin_epsisode_lengths(episode_lengths, bin_size=100):
+def bin_episode_lengths(episode_lengths, bin_size=100):
     """Group episodes lengths in bins"""
     reshaped_lengths = episode_lengths[:len(episode_lengths)
         // bin_size * bin_size].reshape(-1, bin_size)
@@ -153,7 +153,7 @@ fig, ax = plt.subplots(nrows=2, ncols=3)
 
 print("\nRunning SARSA")
 Q, ep_lengths = run_temporal_difference(env, algorithm='sarsa')
-binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
+binned_ep_lengths = bin_episode_lengths(ep_lengths)
 plot_V(Q, env, ax[0][0])
 plot_Q(Q, env, ax[0][1])
 plot_episode_lengths(binned_ep_lengths, ax[0][2])
@@ -161,7 +161,7 @@ print_policy(Q, env)
 
 print("\nRunning Q-learning")
 Q, ep_lengths = run_temporal_difference(env, algorithm='qlearning')
-binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
+binned_ep_lengths = bin_episode_lengths(ep_lengths)
 plot_V(Q, env, ax[1][0])
 plot_Q(Q, env, ax[1][1])
 plot_episode_lengths(binned_ep_lengths, ax[1][2])
