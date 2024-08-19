@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import patches
 
 
-def print_policy(Q, env):
+def print_policy(Q: np.ndarray, env: gym.Env):
     """Print a policy obtained from the Q function"""
     moves = [u'←', u'↓', u'→', u'↑']
     if not hasattr(env, 'desc'):
@@ -22,7 +22,7 @@ def print_policy(Q, env):
     print('\n'.join([''.join([u'{:2}'.format(item) for item in row]) for row in policy]))
 
 
-def plot_V(Q, env, ax):
+def plot_V(Q: np.ndarray, env: gym.Env, ax: plt.Axes):
     """Plot the state values obtined from the Q function"""
     if not hasattr(env, 'desc'):
         env = env.env
@@ -44,7 +44,7 @@ def plot_V(Q, env, ax):
     ax.set_yticks([])
 
 
-def plot_Q(Q, env, ax):
+def plot_Q(Q: np.ndarray, env: gym.Env, ax: plt.Axes):
     """Plot the action value function"""
 
     if not hasattr(env, 'desc'):
@@ -82,7 +82,7 @@ def plot_Q(Q, env, ax):
     ax.set_yticks([])
 
 
-def plot_episode_lengths(episode_lengths, ax):
+def plot_episode_lengths(episode_lengths: np.ndarray, ax: plt.Axes):
     """Plot the episode lengths against the episode index"""
     ax.plot(episode_lengths)
     ax.set_title("Episode lengths")
@@ -90,7 +90,9 @@ def plot_episode_lengths(episode_lengths, ax):
     ax.set_ylabel("Length")
 
 
-def create_environment(env_name='FrozenLake-v0', is_slippery=True, map_name='4x4'):
+def create_environment(env_name: str = 'FrozenLake-v0',
+                       is_slippery: bool = True,
+                       map_name: str = '4x4'):
     """Create and return the environment based on given parameters."""
     if env_name == 'FrozenLake-v0':
         return gym.make(env_name, is_slippery=is_slippery, map_name=map_name)
@@ -98,14 +100,14 @@ def create_environment(env_name='FrozenLake-v0', is_slippery=True, map_name='4x4
         return gym.make(env_name)
 
 
-def bin_episode_lengths(episode_lengths, bin_size=100):
+def bin_episode_lengths(episode_lengths: np.ndarray, bin_size: int = 100):
     """Group episodes lengths in bins"""
     reshaped_lengths = episode_lengths[:len(episode_lengths)
         // bin_size * bin_size].reshape(-1, bin_size)
     return reshaped_lengths.mean(axis=1)
 
 
-def select_action_eps_greedy(env, Q, s, eps):
+def select_action_eps_greedy(env: gym.Env, Q: np.ndarray, s, eps: float):
     """Get an action using the epsilon-greedy action selection"""
     if np.random.random() > eps:
         return np.argmax(Q[s])
@@ -113,7 +115,12 @@ def select_action_eps_greedy(env, Q, s, eps):
         return np.random.randint(env.action_space.n)
 
 
-def run_temporal_difference(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4), algorithm='sarsa'):
+def run_temporal_difference(env: gym.Env,
+                            alpha: float = 0.1,
+                            gamma: float = 0.9,
+                            epsilon: float = 0.5,
+                            num_ep: int = int(1e4),
+                            algorithm: str = 'sarsa'):
     """Calculate the action-value function with a temporal difference algorithm (SARSA or Q-learning)"""
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     episode_lengths = np.zeros(num_ep)
