@@ -113,8 +113,8 @@ def select_action_eps_greedy(env, Q, s, eps):
         return np.random.randint(env.action_space.n)
 
 
-def sarsa(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
-    """Calculate the action-value function with the SARSA algorithm"""
+def run_temporal_difference(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4), algorithm='sarsa'):
+    """Calculate the action-value function with a temporal difference algorithm (SARSA or Q-learning)"""
     Q = np.zeros((env.observation_space.n, env.action_space.n))
     episode_lengths = np.zeros(num_ep)
 
@@ -126,32 +126,19 @@ def sarsa(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
         while not done:
             s_prime, r, done, _ = env.step(a)
             a_prime = select_action_eps_greedy(env, Q, s_prime, epsilon)
-            Q[s][a] += alpha*(r + gamma*Q[s_prime][a_prime] - Q[s][a])
-            s = s_prime
-            a = a_prime
+
+            if algorithm == 'sarsa':
+                target = r + gamma * Q[s_prime][a_prime]
+            elif algorithm == 'qlearning':
+                target = r + gamma * np.max(Q[s_prime])
+            else:
+                raise ValueError("Algorithm must be either 'sarsa' or 'qlearning'.")
+
+            Q[s][a] += alpha*(target - Q[s][a])
+
+            s, a = s_prime, a_prime
             steps += 1
-        episode_lengths[i] = steps
 
-    return Q, episode_lengths
-
-
-def qlearning(env, alpha=0.1, gamma=0.9, epsilon=0.5, num_ep=int(1e4)):
-    """Calculate the action-value function with the Q-learning algorithm"""
-    Q = np.zeros((env.observation_space.n, env.action_space.n))
-    episode_lengths = np.zeros(num_ep)
-
-    for i in range(num_ep):
-        s = env.reset()
-        a = select_action_eps_greedy(env, Q, s, epsilon)
-        done = False
-        steps = 0
-        while not done:
-            s_prime, r, done, _ = env.step(a)
-            a_prime = select_action_eps_greedy(env, Q, s_prime, epsilon)
-            Q[s][a] += alpha*(r + gamma*np.max(Q[s_prime]) - Q[s][a])
-            s = s_prime
-            a = a_prime
-            steps += 1
         episode_lengths[i] = steps
 
     return Q, episode_lengths
@@ -165,7 +152,7 @@ env.render()
 fig, ax = plt.subplots(nrows=2, ncols=3)
 
 print("\nRunning SARSA")
-Q, ep_lengths = sarsa(env)
+Q, ep_lengths = run_temporal_difference(env, algorithm='sarsa')
 binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
 plot_V(Q, env, ax[0][0])
 plot_Q(Q, env, ax[0][1])
@@ -173,7 +160,7 @@ plot_episode_lengths(binned_ep_lengths, ax[0][2])
 print_policy(Q, env)
 
 print("\nRunning Q-learning")
-Q, ep_lengths = qlearning(env)
+Q, ep_lengths = run_temporal_difference(env, algorithm='qlearning')
 binned_ep_lengths = bin_epsisode_lengths(ep_lengths)
 plot_V(Q, env, ax[1][0])
 plot_Q(Q, env, ax[1][1])
